@@ -1,0 +1,9 @@
+version: '3'
+services:
+  app:
+    image: node:15
+    restart: on-failure
+    command: bash -c "yarn && yarn start"
+    volumes:
+      - '.:/usr/src/app'
+    working_dir: /usr/src/app

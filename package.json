@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "dependencies": {
+    "@hawk.so/nodejs": "^2.1.0",
+    "dotenv": "^8.2.0",
+    "hashtag-regex": "^2.1.0",
+    "instagram-web-api": "^2.2.2",
+    "node-telegram-bot-api": "^0.50.0",
+    "nodemon": "^2.0.6",
+    "readline-sync": "^1.4.10",
+    "utf8": "^3.0.0"
+  }
+}
