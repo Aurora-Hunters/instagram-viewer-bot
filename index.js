@@ -68,7 +68,7 @@ const getMediaPostLink = function (contentData) {
     });
 
     /**
-     * Try ot login
+     * Try to login
      */
     await instagram.login();
 
@@ -115,8 +115,6 @@ const getMediaPostLink = function (contentData) {
                 });
                 console.error(error);
             })
-
-        throw new Error('Shutting down');
     });
 
     /**
