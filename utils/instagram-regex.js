@@ -15,5 +15,5 @@
  * instagram.com/p/CHeENTUjysv
  */
 module.exports = () => {
-    return /((?:https?:\/\/)?(?:www\.)?instagram\.com\/p\/([^/?#&]+)).*/g
+    return /((?:https?:\/\/)?(?:www\.)?instagram\.com\/(?:p|reel)\/([^/?#&]+)).*/g
 }
