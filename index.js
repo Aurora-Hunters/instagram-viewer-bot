@@ -44,7 +44,7 @@ const getMediaText = function (contentData) {
 
     return `${composedCaption}\n` +
         `\n` +
-        `Photo by instagram.com/${contentData.owner.username}`;
+        `📷 instagram.com/${contentData.owner.username}`;
 };
 
 /**
