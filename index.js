@@ -16,6 +16,7 @@ const Instagram = require('instagram-web-api');
 const TelegramBot = require('node-telegram-bot-api');
 const TextFormatting = require('./utils/text-formatting')();
 const instagramRegex = require('./utils/instagram-regex')();
+const Media = require('./modules/media');
 
 /**
  * Get a url for media entity
@@ -86,15 +87,43 @@ const getMediaPostLink = function (contentData) {
         /** Get chatId for response sending */
         const chatId = msg.chat.id;
         /** Get Instagram post tag */
+        const link = match[1];
         const mediaTag = match[2];
 
-        /** Load Instagram post media data*/
-        const contentData = await instagram.getMediaByShortcode({ shortcode: mediaTag });
+        let contentData;
+
+        try {
+            /** Load Instagram post media data*/
+            contentData = await instagram.getMediaByShortcode({shortcode: mediaTag});
+        } catch (error) {
+            HawkCatcher.send(error, {
+                msg,
+                contentData
+            });
+            console.error(error);
+        }
+
+        if (!contentData) {
+            const error = new Error('getMediaByShortcode returned undefined');
+
+            HawkCatcher.send(error, {
+                msg,
+                link,
+                contentData
+            });
+            console.error(error);
+            return;
+        }
+
+        const media = new Media(contentData);
 
         /** Get a link for media file */
         const mediaLink = getMediaLink(contentData);
+
         /** Compose text for message */
         const mediaText = getMediaText(contentData);
+
+
 
         /** Prepare options */
         const options = {
@@ -102,19 +131,39 @@ const getMediaPostLink = function (contentData) {
             caption: mediaText
         };
 
-        /**
-         * Send message
-         */
-        bot.sendChatAction(chatId, contentData.is_video ? 'upload_video' : 'upload_photo');
-        bot[contentData.is_video ? 'sendVideo' : 'sendPhoto'](chatId, mediaLink, options)
-            .catch((error) => {
-                HawkCatcher.send(error, {
-                    msg,
-                    options,
-                    contentData
-                });
-                console.error(error);
+        if (!media.hasMultipleMedia()) {
+            /**
+             * Send message
+             */
+            bot.sendChatAction(chatId, contentData.is_video ? 'upload_video' : 'upload_photo');
+            bot[contentData.is_video ? 'sendVideo' : 'sendPhoto'](chatId, mediaLink, options)
+                .catch((error) => {
+                    HawkCatcher.send(error, {
+                        msg,
+                        options,
+                        contentData
+                    });
+                    console.error(error);
+                })
+        } else {
+            const medias = media.getMedias();
+
+            medias[0].caption = mediaText;
+
+            bot.sendChatAction(chatId, 'typing');
+            bot.sendMediaGroup(chatId, medias, {
+                reply_to_message_id: msg.message_id,
+                caption: mediaText
             })
+                .catch((error) => {
+                    HawkCatcher.send(error, {
+                        msg,
+                        options,
+                        contentData
+                    });
+                    console.error(error);
+                })
+        }
     });
 
     /**
