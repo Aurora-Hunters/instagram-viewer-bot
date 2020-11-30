@@ -51,7 +51,7 @@ class Media {
      * Get owner's username
      */
     getOwnerUsername() {
-        this.getOwner().username;
+        return this.getOwner().username;
     }
 
     /**
