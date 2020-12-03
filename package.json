@@ -4,7 +4,7 @@
     "start:dev": "nodemon index.js"
   },
   "dependencies": {
-    "@hawk.so/nodejs": "^2.1.0",
+    "@hawk.so/nodejs": "^2.2.0",
     "dotenv": "^8.2.0",
     "hashtag-regex": "^2.1.0",
     "instagram-web-api": "^2.2.2",

@@ -19,33 +19,26 @@ const instagramRegex = require('./utils/instagram-regex')();
 const Media = require('./modules/media');
 
 /**
- * Get a url for media entity
- * @param contentData
- * @returns {string|*}
- */
-const getMediaLink = function (contentData) {
-    if (contentData.is_video) {
-        return contentData.video_url;
-    }
-
-    return contentData.display_resources.slice(-1)[0].src;
-};
-
-/**
  * Compose text for message to be send
  * @param {Media} media
  * @returns {string}
  */
 const getMediaText = function (media) {
-    let composedCaption = media.getDescription();
+    let caption = '';
+    let mediaCaption = media.getDescription();
 
-    composedCaption = TextFormatting.getFirstParagraph(composedCaption);
-    composedCaption = TextFormatting.removeHashtags(composedCaption);
-    composedCaption = TextFormatting.trimStringMaxLenght(composedCaption);
+    if (mediaCaption) {
+        mediaCaption = TextFormatting.getFirstParagraph(mediaCaption);
+        mediaCaption = TextFormatting.removeHashtags(mediaCaption);
+        mediaCaption = TextFormatting.trimStringMaxLenght(mediaCaption);
 
-    return `${composedCaption}\n` +
-           `\n` +
-           `📷 instagram.com/${media.getOwnerUsername()}`;
+        caption = `${mediaCaption}\n` +
+                  `\n`
+    }
+
+    caption += `📷 instagram.com/${media.getOwnerUsername()}`;
+
+    return caption;
 };
 
 /**
@@ -102,11 +95,14 @@ const main = (async () => { try {
             try {
                 /** Load Instagram post media data*/
                 contentData = await instagram.getMediaByShortcode({shortcode: mediaTag});
-            } catch (error) {
+            } catch (e) {
+                const error = new Error(`Cannot get media by shortcode because of ${e}`);
+
                 HawkCatcher.send(error, {
+                    shortcode: mediaTag,
                     msg,
                     contentData
-                });
+                }, { id: chatId });
                 console.error(error);
             }
 
@@ -117,70 +113,86 @@ const main = (async () => { try {
                     msg,
                     link,
                     contentData
-                });
+                }, { id: chatId });
                 console.error(error);
                 return;
             }
 
-            /**
-             * Prepare Media object
-             * @type {Media}
-             */
-            const media = new Media(contentData);
-
-            /**
-             * Compose text for message
-             * @type {string}
-             */
-            const mediaText = getMediaText(media);
-
-            if (!media.hasMultipleMedia()) {
-                /** Get a link for media file */
-                const mediaSrc = media.getMediaSourceObject();
-                const mediaLink = mediaSrc.media;
-
-                const action = media.isVideo() ? 'upload_video' : 'upload_photo';
-                const actionMethod = media.isVideo() ? 'sendVideo' : 'sendPhoto';
-
-                /** Prepare options */
-                const options = {
-                    reply_to_message_id: msg.message_id,
-                    caption: mediaText
-                };
+            try {
+                /**
+                 * Prepare Media object
+                 * @type {Media}
+                 */
+                const media = new Media(contentData);
 
                 /**
-                 * Send message
+                 * Get array of medias
+                 * @type {{type: string, media: string}[]}
                  */
-                bot.sendChatAction(chatId, action);
-                bot[actionMethod](chatId, mediaLink, options)
-                    .catch((error) => {
-                        HawkCatcher.send(error, {
-                            msg,
-                            options,
-                            contentData
-                        });
-                        console.error(error);
-                    })
-            } else {
                 const medias = media.getMedias();
 
-                medias[0].caption = mediaText;
-
                 /**
-                 * Send message
+                 * Compose text for message
+                 * @type {string}
                  */
-                bot.sendChatAction(chatId, 'upload_photo');
-                bot.sendMediaGroup(chatId, medias, {
-                    reply_to_message_id: msg.message_id
-                })
-                    .catch((error) => {
-                        HawkCatcher.send(error, {
-                            msg,
-                            options,
-                            contentData
-                        });
-                        console.error(error);
+                const mediaText = getMediaText(media);
+
+                if (!media.hasMultipleMedia()) {
+                    const mediaItem = medias[0];
+
+                    const action = mediaItem.type === 'video' ? 'upload_video' : 'upload_photo';
+                    const actionMethod = mediaItem.type === 'video' ? 'sendVideo' : 'sendPhoto';
+
+                    /** Prepare options */
+                    const options = {
+                        reply_to_message_id: msg.message_id,
+                        caption: mediaText
+                    };
+
+                    /**
+                     * Send message
+                     */
+                    bot.sendChatAction(chatId, action);
+                    bot[actionMethod](chatId, mediaItem.media, options)
+                        .catch((error) => {
+                            HawkCatcher.send(error, {
+                                msg,
+                                options,
+                                contentData
+                            }, {id: chatId});
+                            console.error(error);
+                        })
+                } else {
+                    medias[0].caption = mediaText;
+
+                    /**
+                     * Send message
+                     */
+                    bot.sendChatAction(chatId, 'upload_photo');
+                    bot.sendMediaGroup(chatId, medias, {
+                        reply_to_message_id: msg.message_id
                     })
+                        .catch((error) => {
+                            HawkCatcher.send(error, {
+                                msg,
+                                options,
+                                contentData
+                            }, {id: chatId});
+                            console.error(error);
+                        })
+                }
+
+                HawkCatcher.send('Metrika hit', {
+                    link,
+                    msg
+                }, {id: chatId})
+            } catch (e) {
+                HawkCatcher.send(e, {
+                    link,
+                    msg,
+                    contentData
+                }, {id: chatId})
+                console.error(e);
             }
         });
 

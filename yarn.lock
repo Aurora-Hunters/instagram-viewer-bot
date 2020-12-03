@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@hawk.so/nodejs@^2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@hawk.so/nodejs/-/nodejs-2.1.0.tgz#e57c6042be0459a43c94a6277192e4995c993c49"
-  integrity sha512-4Yhhj43lkyNZw3cgGGHp99Oip2dgCFzV7BBG2m/rgTcMzWc3YCick5oRmtMnlWMNfsQmDUYphj4ewa9P/KkmRQ==
+"@hawk.so/nodejs@^2.2.0":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@hawk.so/nodejs/-/nodejs-2.2.0.tgz#d72f028b2b39eaf6ac1a8b5f711ab9faa7649cb3"
+  integrity sha512-6QdzhfNfzEEmkHzW3ApfGAbl4Ri8P68ezHqHgzToGVN/42SeC/wWX21hR69BrXSfMloK/33AH+Be/luNY388Ug==
   dependencies:
     axios "^0.19.2"
     stack-trace "^0.0.10"

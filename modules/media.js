@@ -1,3 +1,5 @@
+const HawkCatcher = require('@hawk.so/nodejs').default;
+
 /**
  * Helper wrapper for getting information from Instagram media response
  */
@@ -15,7 +17,11 @@ class Media {
      * @returns {string}
      */
     getDescription() {
-        return this.content.edge_media_to_caption.edges[0].node.text;
+        const mediaItem = this.content.edge_media_to_caption.edges[0];
+
+        if (!mediaItem) return undefined;
+
+        return mediaItem.node.text;
     }
 
     /**
