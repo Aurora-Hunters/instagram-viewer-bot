@@ -175,7 +175,6 @@ const main = (async () => { try {
                         .catch((error) => {
                             HawkCatcher.send(error, {
                                 msg,
-                                options,
                                 contentData
                             }, {id: chatId});
                             console.error(error);
