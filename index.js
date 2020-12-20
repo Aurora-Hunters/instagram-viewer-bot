@@ -125,6 +125,8 @@ const main = (async () => { try {
                  */
                 const media = new Media(contentData);
 
+                if (media.getOwner().is_private) return;
+
                 /**
                  * Get array of medias
                  * @type {{type: string, media: string}[]}
