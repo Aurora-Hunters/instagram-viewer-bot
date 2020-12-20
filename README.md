@@ -4,7 +4,7 @@ Telegram bot for fetching Instagram posts.
 
 Add [@imagram_bot](t.me/imagram_bot) to your group chat to enable links preloading.
 
-![](assets/example.png)
+![](assets/example-reply.png)
 
 ## How to run
 
