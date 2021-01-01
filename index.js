@@ -69,7 +69,7 @@ const main = (async () => { try {
 
             console.log(`Logged in as ${process.env.INSTAGRAM_USERNAME}.`);
         } catch (error) {
-            throw new Error(`Cannot login as ${process.env.INSTAGRAM_USERNAME}`);
+            throw new Error(error);
         }
 
         /**
