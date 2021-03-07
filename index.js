@@ -23,7 +23,7 @@ const request = async (uri) => {
         method: 'get',
         url: `https://instagram.com${uri}/?__a=1`,
         headers: {
-            "Cookie": "csrftoken=T3AutpVMgTFJIfKDd6tl7ZDFjuOXzTmr; ds_user_id=5512032208; rur=RVA; shbid=16848; shbts=1614962500.1277199; sessionid=5512032208%3AqyibNQ1UogwVDe%3A27; ig_did=EEE4E28B-F02E-4576-8C21-BD7D04687046; ig_nrcb=1; mid=X5G7VQAEAAGR7IjoiYVl3GUEUbx7",
+            "Cookie": process.env.COOKIE_STRING,
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15",
             "Accept-Language":  "en-us",
             "Accept-Encoding": "gzip, deflate, br",
