@@ -12,11 +12,26 @@ HawkCatcher.init({
     token: process.env.HAWK_TOKEN
 });
 
-const Instagram = require('instagram-web-api');
 const TelegramBot = require('node-telegram-bot-api');
 const TextFormatting = require('./utils/text-formatting')();
 const instagramRegex = require('./utils/instagram-regex')();
 const Media = require('./modules/media');
+const axios = require('axios');
+
+const request = async (uri) => {
+    return (await axios({
+        method: 'get',
+        url: `https://instagram.com${uri}/?__a=1`,
+        headers: {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15",
+            "Accept-Language":  "en-us",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Host": "www.instagram.com"
+        }
+    })).data;
+};
 
 /**
  * Compose text for message to be send
@@ -49,7 +64,11 @@ const main = (async () => { try {
      * Prepare Instagram
      * @type {Instagram}
      */
-    const instagram = new Instagram({});
+    // const instagram = new Instagram({});
+    await request('/instagram');
+
+    console.log('Ready to process photos')
+
 
     /**
      * Prepare Telegram bot
@@ -73,7 +92,7 @@ const main = (async () => { try {
 
         try {
             /** Load Instagram post media data*/
-            contentData = await instagram.getMediaByShortcode({shortcode: mediaTag});
+            contentData = await request(`/p/${mediaTag}`);
         } catch (e) {
             const error = new Error(`Cannot get media by shortcode because of ${e}`);
 

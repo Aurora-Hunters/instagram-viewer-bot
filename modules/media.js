@@ -9,7 +9,7 @@ class Media {
      * @param contentData
      */
     constructor(contentData) {
-        this.content = contentData;
+        this.content = contentData.graphql.shortcode_media;
     }
 
     /**

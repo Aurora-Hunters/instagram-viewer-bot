@@ -5,9 +5,9 @@
   },
   "dependencies": {
     "@hawk.so/nodejs": "^2.2.0",
+    "axios": "^0.21.1",
     "dotenv": "^8.2.0",
     "hashtag-regex": "^2.1.0",
-    "instagram-web-api": "^2.2.2",
     "node-telegram-bot-api": "^0.50.0",
     "nodemon": "^2.0.6"
   }
