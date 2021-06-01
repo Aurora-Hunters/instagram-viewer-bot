@@ -46,13 +46,14 @@ const getMediaText = function (media) {
     if (mediaCaption) {
         mediaCaption = TextFormatting.getFirstParagraph(mediaCaption);
         mediaCaption = TextFormatting.removeHashtags(mediaCaption);
-        mediaCaption = TextFormatting.trimStringMaxLenght(mediaCaption);
+        // mediaCaption = TextFormatting.trimStringMaxLenght(mediaCaption);
+        mediaCaption = TextFormatting.createProfileLink(mediaCaption);
 
         caption = `${mediaCaption}\n` +
                   `\n`
     }
 
-    caption += `📷 instagram.com/${media.getOwnerUsername()}`;
+    caption += `[📷](${media.getMediaPostLink()}) instagram.com/${media.getOwnerUsername()}`;
 
     return caption;
 };
@@ -147,7 +148,8 @@ const main = (async () => { try {
                 /** Prepare options */
                 const options = {
                     reply_to_message_id: msg.message_id,
-                    caption: mediaText
+                    caption: mediaText,
+                    parse_mode: 'Markdown'
                 };
 
                 /**
@@ -165,6 +167,7 @@ const main = (async () => { try {
                     })
             } else {
                 medias[0].caption = mediaText;
+                medias[0].parse_mode = 'Markdown';
 
                 /**
                  * Send message
