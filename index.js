@@ -53,7 +53,8 @@ const getMediaText = function (media) {
                   `\n`
     }
 
-    caption += `[📷](${media.getMediaPostLink()}) instagram.com/${media.getOwnerUsername()}`;
+    // caption += `[📷](${media.getMediaPostLink()}) instagram.com/${media.getOwnerUsername()}`;
+    caption += `📷 instagram.com/${media.getOwnerUsername()}`;
 
     return caption;
 };
