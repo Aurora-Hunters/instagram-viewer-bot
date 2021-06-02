@@ -46,8 +46,8 @@ const getMediaText = function (media) {
     if (mediaCaption) {
         mediaCaption = TextFormatting.getFirstParagraph(mediaCaption);
         mediaCaption = TextFormatting.removeHashtags(mediaCaption);
-        // mediaCaption = TextFormatting.trimStringMaxLenght(mediaCaption);
-        mediaCaption = TextFormatting.createProfileLink(mediaCaption);
+        mediaCaption = TextFormatting.trimStringMaxLenght(mediaCaption);
+        // mediaCaption = TextFormatting.createProfileLink(mediaCaption);
 
         caption = `${mediaCaption}\n` +
                   `\n`
@@ -149,7 +149,7 @@ const main = (async () => { try {
                 const options = {
                     reply_to_message_id: msg.message_id,
                     caption: mediaText,
-                    parse_mode: 'Markdown'
+                    // parse_mode: 'Markdown'
                 };
 
                 /**
@@ -167,7 +167,7 @@ const main = (async () => { try {
                     })
             } else {
                 medias[0].caption = mediaText;
-                medias[0].parse_mode = 'Markdown';
+                // medias[0].parse_mode = 'Markdown';
 
                 /**
                  * Send message
