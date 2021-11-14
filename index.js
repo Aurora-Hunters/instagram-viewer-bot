@@ -127,8 +127,14 @@ const main = (async () => { try {
             const media = new Media(contentData);
 
             if (media.getOwner().is_private) {
-                bot.sendChatAction(chatId, 'typing');
-                bot.sendMessage(chatId, 'Unable to get images because this profile is private')
+                const action = 'typing';
+                const message = 'Unable to get images because this profile is private';
+                const options = {
+                    reply_to_message_id: msg.message_id
+                }
+
+                bot.sendChatAction(chatId, action);
+                bot.sendMessage(chatId, message, options)
                     .catch((error) => {
                         HawkCatcher.send(error, {
                             msg,
