@@ -319,11 +319,29 @@ const main = (async () => { try {
                     bot.sendChatAction(chatId, 'upload_photo');
 
                     bot.sendPhoto(chatId, mediaUrl, options)
+                        .catch((error) => {
+                            HawkCatcher.send(error, {
+                                msg,
+                                options,
+                                mediaUrl,
+                                storyItem
+                            }, {id: chatId});
+                            console.error(error);
+                        })
                 } else if (storyItem.media_type === 2) {
                     mediaUrl = storyItem.video_versions[0].url;
 
                     bot.sendChatAction(chatId, 'upload_video');
                     bot.sendVideo(chatId, mediaUrl, options)
+                        .catch((error) => {
+                            HawkCatcher.send(error, {
+                                msg,
+                                options,
+                                mediaUrl,
+                                storyItem
+                            }, {id: chatId});
+                            console.error(error);
+                        })
                 }
 
             });
