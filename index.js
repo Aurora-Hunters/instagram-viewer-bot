@@ -87,7 +87,7 @@ const main = (async () => { try {
         const message =
             `😜\n` +
             `\n` +
-            `Send me a link to Instagram posts, reels or stories.\n` +
+            `Send me a link to Instagram post, reel or story.\n` +
             `I even work in a group chat.\n` +
             `\n` +
             `Пришли мне ссылку на пост, рилс или сторис.\n` +
