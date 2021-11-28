@@ -260,6 +260,26 @@ const main = (async () => { try {
         try {
             const userId = contentData.user.id;
 
+            if (contentData.user.is_private) {
+                const action = 'typing';
+                const message = 'Unable to get images because this profile is private';
+                const options = {
+                    reply_to_message_id: msg.message_id
+                }
+
+                bot.sendChatAction(chatId, action);
+                bot.sendMessage(chatId, message, options)
+                    .catch((error) => {
+                        HawkCatcher.send(error, {
+                            msg,
+                            options,
+                            contentData
+                        }, {id: chatId});
+                        console.error(error);
+                    })
+                return;
+            }
+
             const storiesData = await request(`/api/v1/feed/reels_media/?reel_ids=${userId}`, false);
 
             storiesData.reels[userId.toString()].items.forEach(storyItem => {
