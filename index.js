@@ -14,22 +14,25 @@ HawkCatcher.init({
 
 const TelegramBot = require('node-telegram-bot-api');
 const TextFormatting = require('./utils/text-formatting')();
-const instagramRegex = require('./utils/instagram-regex')();
+const instagramRegex = require('./utils/instagram-regex');
 const Media = require('./modules/media');
 const axios = require('axios');
+const {story} = require("./utils/instagram-regex");
 
-const request = async (uri) => {
+const request = async (uri, isApi = true) => {
+    console.log('REQ', `https://${isApi ? '' : 'i.'}instagram.com${uri}${isApi ? '/?__a=1' : ''}`);
+
     return (await axios({
         method: 'get',
-        url: `https://instagram.com${uri}/?__a=1`,
+        url: `https://${isApi ? '' : 'i.'}instagram.com${uri}${isApi ? '/?__a=1' : ''}`,
         headers: {
             "Cookie": process.env.COOKIE_STRING,
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15",
-            "Accept-Language":  "en-us",
-            "Accept-Encoding": "gzip, deflate, br",
-            "Connection": "keep-alive",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Host": "www.instagram.com"
+            "User-Agent": "Instagram 10.26.0 (iPhone8,1; iOS 10_2; en_US; en-US; scale=2.00; gamut=normal; 750x1334) AppleWebKit/420+",
+            // "Accept-Language":  "en-us",
+            // "Accept-Encoding": "gzip, deflate, br",
+            // "Connection": "keep-alive",
+            // "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            // "Host": "www.instagram.com"
         }
     })).data;
 };
@@ -83,7 +86,7 @@ const main = (async () => { try {
      * If message contains a link to instagram post
      * Then get this link and find a post data
      */
-    bot.onText(instagramRegex, async (msg, match) => {
+    bot.onText(instagramRegex.post, async (msg, match) => {
         /** Get chatId for response sending */
         const chatId = msg.chat.id;
 
@@ -208,6 +211,88 @@ const main = (async () => { try {
                 link,
                 msg
             }, {id: chatId})
+        } catch (e) {
+            HawkCatcher.send(e, {
+                link,
+                msg,
+                contentData
+            }, {id: chatId})
+            console.error(e);
+        }
+    });
+
+    bot.onText(instagramRegex.story, async (msg, match) => {
+        /** Get chatId for response sending */
+        const chatId = msg.chat.id;
+
+        const link = match[1];
+        const userName = match[2];
+        const storyId = match[3];
+
+        let contentData;
+
+        try {
+            /** Load Instagram post media data*/
+            contentData = await request(`/stories/${userName}/${storyId}`);
+        } catch (e) {
+            const error = new Error(`Cannot get media by shortcode because of ${e}`);
+
+            HawkCatcher.send(error, {
+                shortcode: mediaTag,
+                msg,
+                contentData
+            }, { id: chatId });
+            console.error(error);
+        }
+
+        if (!contentData) {
+            const error = new Error('Cannot get story author cause response is empty');
+
+            HawkCatcher.send(error, {
+                msg,
+                link,
+                contentData
+            }, { id: chatId });
+            console.error(error);
+            return;
+        }
+
+        try {
+            const userId = contentData.user.id;
+
+            const storiesData = await request(`/api/v1/feed/reels_media/?reel_ids=${userId}`, false);
+
+            storiesData.reels[userId.toString()].items.forEach(storyItem => {
+                if (storyItem.id !== `${storyId}_${userId}`) return;
+
+                let mediaUrl;
+
+                /** Prepare options */
+                const options = {
+                    reply_to_message_id: msg.message_id,
+                    caption: `🚀 instagram.com/${userName}`,
+                    // parse_mode: 'Markdown'
+                };
+
+                /**
+                 * media_type 1 — photo
+                 * media_type 2 — video
+                 */
+                if (storyItem.media_type === 1) {
+                    mediaUrl = storyItem.image_versions2.candidates[0].url;
+
+                    bot.sendChatAction(chatId, 'upload_photo');
+
+                    bot.sendPhoto(chatId, mediaUrl, options)
+                } else if (storyItem.media_type === 2) {
+                    mediaUrl = storyItem.video_versions[0].url;
+
+                    bot.sendChatAction(chatId, 'upload_video');
+                    bot.sendVideo(chatId, mediaUrl, options)
+                }
+
+            });
+
         } catch (e) {
             HawkCatcher.send(e, {
                 link,

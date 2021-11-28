@@ -14,6 +14,20 @@
  * instagram.com/p/CHeENTUjysv/
  * instagram.com/p/CHeENTUjysv
  */
-module.exports = () => {
-    return /((?:https?:\/\/)?(?:www\.)?instagram\.com\/(?:p|reel)\/([^/?#&]+)).*/g
+
+/**
+ * Reels
+ *
+ * https://www.instagram.com/p/CWdG72bFXhY/
+ */
+module.exports = {
+    /**
+     * Posts and reels
+     */
+    post: /((?:https?:\/\/)?(?:www\.)?instagram\.com\/(?:p|reel)\/([^/?#&]+)).*/g,
+
+    /**
+     * Stories
+     */
+    story: /((?:https?:\/\/)?(?:www\.)?instagram\.com\/stories\/([^/?#&]+)\/([^/?#&]+)).*/g
 }
