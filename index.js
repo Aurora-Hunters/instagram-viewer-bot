@@ -82,6 +82,21 @@ const main = (async () => { try {
      */
     const bot = new TelegramBot(process.env.BOT_TOKEN, {polling: true});
 
+    bot.onText(/\/start/, (msg, match) => {
+        const chatId = msg.chat.id;
+        const message =
+            `😜\n` +
+            `\n` +
+            `Send me a link to Instagram posts, reels or stories.\n` +
+            `I even work in a group chat.\n` +
+            `\n` +
+            `Пришли мне ссылку на пост, рилс или сторис.\n` +
+            `Могу работать даже в групповом чате.\n`;
+
+        bot.sendChatAction(chatId, 'typing');
+        bot.sendMessage(chatId, message);
+    });
+
     /**
      * If message contains a link to instagram post
      * Then get this link and find a post data
