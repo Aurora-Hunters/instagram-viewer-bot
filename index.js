@@ -344,6 +344,10 @@ const main = (async () => { try {
                         })
                 }
 
+                HawkCatcher.send('Metrika hit', {
+                    link,
+                    msg
+                }, {id: chatId})
             });
 
         } catch (e) {
