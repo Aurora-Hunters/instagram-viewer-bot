@@ -29,12 +29,17 @@ const downloadFile = require('./utils/download-content');
 const request = async (uri, isApi = true) => {
     console.log('REQ', `https://${isApi ? '' : 'i.'}instagram.com${uri}${isApi ? '/?__a=1' : ''}`);
 
+    const UA = {
+        iphone: 'Instagram 10.26.0 (iPhone8,1; iOS 10_2; en_US; en-US; scale=2.00; gamut=normal; 750x1334) AppleWebKit/420+',
+        macos: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.1 Safari/605.1.15'
+    }
+
     return (await axios({
         method: 'get',
         url: `https://${isApi ? '' : 'i.'}instagram.com${uri}${isApi ? '/?__a=1' : ''}`,
         headers: {
             "Cookie": process.env.COOKIE_STRING,
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.1 Safari/605.1.15",
+            "User-Agent": isApi ? UA.macos : UA.iphone,
         }
     })).data;
 };
