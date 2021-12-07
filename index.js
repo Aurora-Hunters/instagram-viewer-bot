@@ -32,7 +32,7 @@ const request = async (uri, isApi = true) => {
     const UA = {
         iphone: 'Instagram 10.26.0 (iPhone8,1; iOS 10_2; en_US; en-US; scale=2.00; gamut=normal; 750x1334) AppleWebKit/420+',
         macos: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.1 Safari/605.1.15'
-    }
+    };
 
     return (await axios({
         method: 'get',
@@ -185,6 +185,8 @@ const main = (async () => { try {
             medias[0].caption = getMediaText(media);
 
             const action = medias[0].type === 'video' ? 'upload_video' : 'upload_photo';
+
+            bot.sendChatAction(chatId, action);
 
             medias = await Promise.all(medias.map(async (mediaItem) => {
                 try {
