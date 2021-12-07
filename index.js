@@ -13,11 +13,18 @@ HawkCatcher.init({
 });
 
 const TelegramBot = require('node-telegram-bot-api');
+const axios = require('axios');
+const { uploadByUrl, uploadByBuffer } = require('telegraph-uploader');
+const path = require('path');
+const fs = require('fs');
+const mime = require('mime-types');
+
 const TextFormatting = require('./utils/text-formatting')();
 const instagramRegex = require('./utils/instagram-regex');
 const Media = require('./modules/media');
-const axios = require('axios');
 const {story} = require("./utils/instagram-regex");
+const ffmpeg = require('./utils/ffmpeg');
+const downloadFile = require('./utils/download-content');
 
 const request = async (uri, isApi = true) => {
     console.log('REQ', `https://${isApi ? '' : 'i.'}instagram.com${uri}${isApi ? '/?__a=1' : ''}`);
@@ -27,12 +34,7 @@ const request = async (uri, isApi = true) => {
         url: `https://${isApi ? '' : 'i.'}instagram.com${uri}${isApi ? '/?__a=1' : ''}`,
         headers: {
             "Cookie": process.env.COOKIE_STRING,
-            "User-Agent": "Instagram 10.26.0 (iPhone8,1; iOS 10_2; en_US; en-US; scale=2.00; gamut=normal; 750x1334) AppleWebKit/420+",
-            // "Accept-Language":  "en-us",
-            // "Accept-Encoding": "gzip, deflate, br",
-            // "Connection": "keep-alive",
-            // "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            // "Host": "www.instagram.com"
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.1 Safari/605.1.15",
         }
     })).data;
 };
@@ -101,6 +103,7 @@ const main = (async () => { try {
      * If message contains a link to instagram post
      * Then get this link and find a post data
      */
+
     bot.onText(instagramRegex.post, async (msg, match) => {
         /** Get chatId for response sending */
         const chatId = msg.chat.id;
@@ -115,7 +118,7 @@ const main = (async () => { try {
             /** Load Instagram post media data*/
             contentData = await request(`/p/${mediaTag}`);
         } catch (e) {
-            const error = new Error(`Cannot get media by shortcode because of ${e}`);
+            const error = new Error(`Cannot get media by shortcode "${mediaTag}" because of ${e}`);
 
             HawkCatcher.send(error, {
                 shortcode: mediaTag,
@@ -146,7 +149,7 @@ const main = (async () => { try {
 
             if (media.getOwner().is_private) {
                 const action = 'typing';
-                const message = 'Unable to get images because this profile is private';
+                const message = 'Profile is private';
                 const options = {
                     reply_to_message_id: msg.message_id
                 }
@@ -168,59 +171,101 @@ const main = (async () => { try {
              * Get array of medias
              * @type {{type: string, media: string}[]}
              */
-            const medias = media.getMedias();
+            let medias = media.getMedias();
 
             /**
              * Compose text for message
              * @type {string}
              */
-            const mediaText = getMediaText(media);
+            medias[0].caption = getMediaText(media);
 
-            if (!media.hasMultipleMedia()) {
-                const mediaItem = medias[0];
+            const action = medias[0].type === 'video' ? 'upload_video' : 'upload_photo';
 
-                const action = mediaItem.type === 'video' ? 'upload_video' : 'upload_photo';
-                const actionMethod = mediaItem.type === 'video' ? 'sendVideo' : 'sendPhoto';
+            medias = await Promise.all(medias.map(async (mediaItem) => {
+                try {
+                    let tgContent;
 
-                /** Prepare options */
-                const options = {
-                    reply_to_message_id: msg.message_id,
-                    caption: mediaText,
-                    // parse_mode: 'Markdown'
-                };
+                    if (mediaItem.type === 'video') {
+                        let tempDir = path.join(__dirname, 'temp');
+                        if (!fs.existsSync(tempDir)){
+                            fs.mkdirSync(tempDir);
+                        }
 
-                /**
-                 * Send message
-                 */
-                bot.sendChatAction(chatId, action);
-                bot[actionMethod](chatId, mediaItem.media, options)
-                    .catch((error) => {
-                        HawkCatcher.send(error, {
-                            msg,
-                            options,
-                            contentData
-                        }, {id: chatId});
-                        console.error(error);
-                    })
-            } else {
-                medias[0].caption = mediaText;
-                // medias[0].parse_mode = 'Markdown';
+                        let fileName = path.basename(mediaItem.media);
+                        fileName = fileName.substring(0, fileName.indexOf('?'));
 
-                /**
-                 * Send message
-                 */
-                bot.sendChatAction(chatId, 'upload_photo');
-                bot.sendMediaGroup(chatId, medias, {
-                    reply_to_message_id: msg.message_id
-                })
-                    .catch((error) => {
-                        HawkCatcher.send(error, {
-                            msg,
-                            contentData
-                        }, {id: chatId});
-                        console.error(error);
-                    })
+                        let filePath = path.join(tempDir, fileName);
+
+                        await downloadFile(mediaItem.media, filePath);
+
+                        await new Promise((resolve, reject) => {
+                            ffmpeg()
+                                .input(filePath)
+                                .input('anullsrc=channel_layout=stereo:sample_rate=44100')
+                                .inputFormat('lavfi')
+                                .outputOption([
+                                    '-c:v libx264',
+                                    '-b:v 1M',
+                                    '-maxrate 1M',
+                                    '-bufsize 500K',
+                                    '-c:a aac',
+                                    '-shortest'
+                                ])
+                                .on('end', async function (stdout, stderr) {
+                                    resolve();
+                                })
+                                .on('error', function (err, stdout, stderr) {
+                                    reject(err);
+                                })
+                                .save(`${filePath}.mp4`)
+                        });
+
+                        tgContent = await uploadByBuffer(fs.readFileSync(`${filePath}.mp4`), 'video/mp4');
+
+                        fs.unlinkSync(`${filePath}`);
+                        fs.unlinkSync(`${filePath}.mp4`);
+                    } else {
+                        tgContent = await uploadByUrl(mediaItem.media);
+                    }
+
+                    mediaItem.media = `${tgContent.link}`;
+
+                    return mediaItem;
+                } catch (error) {
+                    HawkCatcher.send(error, {
+                        msg,
+                        contentData
+                    }, {id: chatId});
+                    console.error(error);
+                }
+
+                return null;
+            }));
+
+            medias = medias.filter(mediaItem => {
+                return mediaItem !== null;
+            });
+
+            // Do not send any message if no media was found
+            if (medias.length === 0) {
+                return;
             }
+
+            /**
+             * Send message
+             */
+            bot.sendChatAction(chatId, action);
+            bot.sendMediaGroup(chatId, medias, {
+                reply_to_message_id: msg.message_id,
+                allow_sending_without_reply: true
+            })
+                .catch((error) => {
+                    HawkCatcher.send(error, {
+                        msg,
+                        contentData
+                    }, {id: chatId});
+                    console.error(error);
+                })
 
             HawkCatcher.send('Metrika hit', {
                 link,
