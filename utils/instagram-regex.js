@@ -24,7 +24,7 @@ module.exports = {
     /**
      * Posts and reels
      */
-    post: /((?:https?:\/\/)?(?:www\.)?instagram\.com\/(?:p|reel)\/([^/?#&]+)).*/g,
+    post: /((?:https?:\/\/)?(?:www\.)?instagram\.com\/(?:p|reel|tv)\/([^/?#&]+)).*/g,
 
     /**
      * Stories
