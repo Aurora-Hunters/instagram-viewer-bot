@@ -25,6 +25,7 @@ const Media = require('./modules/media');
 const {story} = require("./utils/instagram-regex");
 const ffmpeg = require('./utils/ffmpeg');
 const downloadFile = require('./utils/download-content');
+const throttle = require('./utils/throttle');
 
 const request = async (uri, isApi = true) => {
     console.log('REQ', `https://${isApi ? '' : 'i.'}instagram.com${uri}${isApi ? '/?__a=1' : ''}`);
@@ -186,13 +187,15 @@ const main = (async () => { try {
 
             const action = medias[0].type === 'video' ? 'upload_video' : 'upload_photo';
 
-            bot.sendChatAction(chatId, action);
-
             medias = await Promise.all(medias.map(async (mediaItem) => {
                 try {
                     let tgContent;
 
                     if (mediaItem.type === 'video') {
+                        const sendAction = throttle(() => {
+                            bot.sendChatAction(chatId, 'upload_video');
+                        }, 3000)
+
                         let tempDir = path.join(__dirname, 'temp');
                         if (!fs.existsSync(tempDir)){
                             fs.mkdirSync(tempDir);
@@ -203,6 +206,8 @@ const main = (async () => { try {
 
                         let filePath = path.join(tempDir, fileName);
 
+                        bot.sendChatAction(chatId, 'upload_video');
+
                         await downloadFile(mediaItem.media, filePath);
 
                         await new Promise((resolve, reject) => {
@@ -212,9 +217,9 @@ const main = (async () => { try {
                                 .inputFormat('lavfi')
                                 .outputOption([
                                     '-c:v libx264',
-                                    '-b:v 1M',
-                                    '-maxrate 1M',
-                                    '-bufsize 500K',
+                                    '-b:v 660K',
+                                    '-maxrate 660K',
+                                    '-bufsize 330K',
                                     '-c:a aac',
                                     '-shortest'
                                 ])
@@ -223,6 +228,8 @@ const main = (async () => { try {
                                 })
                                 .on('error', function (err, stdout, stderr) {
                                     reject(err);
+                                }).on('progress', function(progress) {
+                                    sendAction();
                                 })
                                 .save(`${filePath}.mp4`)
                         });
