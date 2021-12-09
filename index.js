@@ -359,6 +359,11 @@ const main = (async () => { try {
             storiesData.reels[userId.toString()].items.forEach(storyItem => {
                 if (storyItem.id !== `${storyId}_${userId}`) return;
 
+                if (storyItem.audience) {
+                    console.log(`Not allow to show cause storyItem.audience ${storyItem.audience}`);
+                    return;
+                }
+
                 let mediaUrl;
 
                 /** Prepare options */
