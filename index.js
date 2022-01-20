@@ -18,13 +18,15 @@ const { uploadByUrl, uploadByBuffer } = require('telegraph-uploader');
 const path = require('path');
 const fs = require('fs');
 
-const TextFormatting = require('./utils/text-formatting')();
-const instagramRegex = require('./utils/instagram-regex');
-const Media = require('./modules/media');
-const {story} = require("./utils/instagram-regex");
-const ffmpeg = require('./utils/ffmpeg');
-const downloadFile = require('./utils/download-content');
-const throttle = require('./utils/throttle');
+const commandStart = require('./src/commands/start');
+
+const TextFormatting = require('./src/utils/text-formatting')();
+const instagramRegex = require('./src/utils/instagram-regex');
+const Media = require('./src/modules/media');
+const {story} = require("./src/utils/instagram-regex");
+const ffmpeg = require('./src/utils/ffmpeg');
+const downloadFile = require('./src/utils/download-content');
+const throttle = require('./src/utils/throttle');
 
 const request = async (uri, isApi = true) => {
     console.log('REQ', `https://${isApi ? '' : 'i.'}instagram.com${uri}${isApi ? '/?__a=1' : ''}`);
@@ -82,27 +84,13 @@ const main = (async () => { try {
 
     console.log('Ready to process photos')
 
-
     /**
      * Prepare Telegram bot
      * @type {TelegramBot}
      */
     const bot = new TelegramBot(process.env.BOT_TOKEN, {polling: true});
 
-    bot.onText(/\/start/, (msg, match) => {
-        const chatId = msg.chat.id;
-        const message =
-            `😜\n` +
-            `\n` +
-            `Send me a link to Instagram post, reel or story.\n` +
-            `I even work in a group chat.\n` +
-            `\n` +
-            `Пришли мне ссылку на пост, рилс или сторис.\n` +
-            `Могу работать даже в групповом чате.\n`;
-
-        bot.sendChatAction(chatId, 'typing');
-        bot.sendMessage(chatId, message);
-    });
+    bot.onText(/\/start/, commandStart(bot));
 
     /**
      * If message contains a link to instagram post
@@ -209,39 +197,42 @@ const main = (async () => { try {
 
                         await downloadFile(mediaItem.media, filePath);
 
-                        await new Promise((resolve, reject) => {
-                            ffmpeg()
-                                .input(filePath)
-                                .input('anullsrc=channel_layout=stereo:sample_rate=44100')
-                                .inputFormat('lavfi')
-                                .outputOption([
-                                    '-c:v libx264',
-                                    '-b:v 660K',
-                                    '-maxrate 660K',
-                                    '-bufsize 330K',
-                                    '-c:a aac',
-                                    '-shortest'
-                                ])
-                                .on('end', async function (stdout, stderr) {
-                                    resolve();
-                                })
-                                .on('error', function (err, stdout, stderr) {
-                                    reject(err);
-                                }).on('progress', function(progress) {
-                                    sendAction();
-                                })
-                                .save(`${filePath}.mp4`)
-                        });
+                        // await new Promise((resolve, reject) => {
+                        //     ffmpeg()
+                        //         .input(filePath)
+                        //         .input('anullsrc=channel_layout=stereo:sample_rate=44100')
+                        //         .inputFormat('lavfi')
+                        //         .outputOption([
+                        //             '-c:v libx264',
+                        //             '-b:v 660K',
+                        //             '-maxrate 660K',
+                        //             '-bufsize 330K',
+                        //             '-c:a aac',
+                        //             '-shortest'
+                        //         ])
+                        //         .on('end', async function (stdout, stderr) {
+                        //             resolve();
+                        //         })
+                        //         .on('error', function (err, stdout, stderr) {
+                        //             reject(err);
+                        //         }).on('progress', function(progress) {
+                        //             sendAction();
+                        //         })
+                        //         .save(`${filePath}.mp4`)
+                        // });
 
-                        tgContent = await uploadByBuffer(fs.readFileSync(`${filePath}.mp4`), 'video/mp4');
+                        // tgContent = await uploadByBuffer(fs.readFileSync(`${filePath}.mp4`), 'video/mp4');
 
-                        fs.unlinkSync(`${filePath}`);
-                        fs.unlinkSync(`${filePath}.mp4`);
+                        // fs.unlinkSync(`${filePath}`);
+                        // fs.unlinkSync(`${filePath}.mp4`);
+
+                        // tgContent = fs.createReadStream(`${filePath}.mp4`);
+                      tgContent = fs.createReadStream(`${filePath}`);
                     } else {
-                        tgContent = await uploadByUrl(mediaItem.media);
+                        tgContent = mediaItem.media;
                     }
 
-                    mediaItem.media = `${tgContent.link}`;
+                    mediaItem.media = tgContent;
 
                     return mediaItem;
                 } catch (error) {

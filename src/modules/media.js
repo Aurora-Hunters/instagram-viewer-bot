@@ -29,7 +29,7 @@ class Media {
 
         if (!mediaItem) return undefined;
 
-        return mediaItem.caption.text;
+        return mediaItem.caption && mediaItem.caption.text || '';
     }
 
     /**
