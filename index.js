@@ -197,37 +197,37 @@ const main = (async () => { try {
 
                         await downloadFile(mediaItem.media, filePath);
 
-                        // await new Promise((resolve, reject) => {
-                        //     ffmpeg()
-                        //         .input(filePath)
-                        //         .input('anullsrc=channel_layout=stereo:sample_rate=44100')
-                        //         .inputFormat('lavfi')
-                        //         .outputOption([
-                        //             '-c:v libx264',
-                        //             '-b:v 660K',
-                        //             '-maxrate 660K',
-                        //             '-bufsize 330K',
-                        //             '-c:a aac',
-                        //             '-shortest'
-                        //         ])
-                        //         .on('end', async function (stdout, stderr) {
-                        //             resolve();
-                        //         })
-                        //         .on('error', function (err, stdout, stderr) {
-                        //             reject(err);
-                        //         }).on('progress', function(progress) {
-                        //             sendAction();
-                        //         })
-                        //         .save(`${filePath}.mp4`)
-                        // });
+                        await new Promise((resolve, reject) => {
+                            ffmpeg()
+                                .input(filePath)
+                                .input('anullsrc=channel_layout=stereo:sample_rate=44100')
+                                .inputFormat('lavfi')
+                                .outputOption([
+                                    '-c:v libx264',
+                                    '-b:v 660K',
+                                    '-maxrate 660K',
+                                    '-bufsize 330K',
+                                    '-c:a aac',
+                                    '-shortest'
+                                ])
+                                .on('end', async function (stdout, stderr) {
+                                    resolve();
+                                })
+                                .on('error', function (err, stdout, stderr) {
+                                    reject(err);
+                                }).on('progress', function(progress) {
+                                    sendAction();
+                                })
+                                .save(`${filePath}.mp4`)
+                        });
 
                         // tgContent = await uploadByBuffer(fs.readFileSync(`${filePath}.mp4`), 'video/mp4');
 
                         // fs.unlinkSync(`${filePath}`);
                         // fs.unlinkSync(`${filePath}.mp4`);
 
-                        // tgContent = fs.createReadStream(`${filePath}.mp4`);
-                      tgContent = fs.createReadStream(`${filePath}`);
+                        tgContent = fs.createReadStream(`${filePath}.mp4`);
+                      // tgContent = fs.createReadStream(`${filePath}`);
                     } else {
                         tgContent = mediaItem.media;
                     }
