@@ -17,7 +17,6 @@ const axios = require('axios');
 const { uploadByUrl, uploadByBuffer } = require('telegraph-uploader');
 const path = require('path');
 const fs = require('fs');
-const mime = require('mime-types');
 
 const TextFormatting = require('./utils/text-formatting')();
 const instagramRegex = require('./utils/instagram-regex');

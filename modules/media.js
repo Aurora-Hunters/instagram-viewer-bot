@@ -1,5 +1,11 @@
 const HawkCatcher = require('@hawk.so/nodejs').default;
 
+
+const MEDIA_TYPE = {
+    PHOTO: 1,
+    VIDEO: 2
+}
+
 /**
  * Helper wrapper for getting information from Instagram media response
  */
@@ -11,7 +17,7 @@ class Media {
     constructor(contentData) {
         console.log('contentData', contentData);
 
-        this.content = contentData.graphql.shortcode_media;
+        this.content = contentData.items[0];
     }
 
     /**
@@ -19,11 +25,11 @@ class Media {
      * @returns {string}
      */
     getDescription() {
-        const mediaItem = this.content.edge_media_to_caption.edges[0];
+        const mediaItem = this.content;
 
         if (!mediaItem) return undefined;
 
-        return mediaItem.node.text;
+        return mediaItem.caption.text;
     }
 
     /**
@@ -31,7 +37,7 @@ class Media {
      * @returns {string}
      */
     getShortcode() {
-        return this.content.shortcode;
+        return this.content.code;
     }
 
     /**
@@ -39,12 +45,8 @@ class Media {
      * @param node
      * @returns {boolean}
      */
-    isVideo(node) {
-        if (!node) {
-            node = this.content;
-        }
-
-        return node.is_video;
+    isVideo(mediaItem) {
+        return mediaItem.media_type === MEDIA_TYPE.VIDEO;
     }
 
     /**
@@ -52,7 +54,7 @@ class Media {
      * @returns {*}
      */
     getOwner() {
-        return this.content.owner;
+        return this.content.user;
     }
 
     /**
@@ -74,10 +76,10 @@ class Media {
          * Otherwise get only first item
          */
         if (this.hasMultipleMedia()) {
-            const edges = this.content.edge_sidecar_to_children.edges;
+            const mediaItems = this.content.carousel_media;
 
-            edges.forEach(edge => {
-                medias.push(this.getMediaSourceObject(edge.node));
+            mediaItems.forEach(item => {
+                medias.push(this.getMediaSourceObject(item));
             })
         } else {
             medias.push(this.getMediaSourceObject(this.content));
@@ -88,24 +90,20 @@ class Media {
 
     /**
      * Get media's type and source link
-     * @param node
+     * @param mediaItem
      * @returns {{media: string, type: string}}
      */
-    getMediaSourceObject(node) {
-        if (!node) {
-            node = this.content;
-        }
-
-        if (this.isVideo(node)) {
+    getMediaSourceObject(mediaItem) {
+        if (this.isVideo(mediaItem)) {
             return {
                 type: 'video',
-                media: node.video_url
+                media: mediaItem.video_versions[0].url
             };
         }
 
         return {
             type: 'photo',
-            media: node.display_resources.slice(-1)[0].src
+            media: mediaItem.image_versions2.candidates[0].url
         };
     }
 
@@ -115,7 +113,7 @@ class Media {
      * @returns {boolean}
      */
     hasMultipleMedia() {
-        return !!this.content.edge_sidecar_to_children;
+        return this.content.carousel_media_count > 1;
     }
 
     /**
