@@ -179,6 +179,8 @@ const main = (async () => { try {
                     let tgContent;
 
                     if (mediaItem.type === 'video') {
+                        return null;
+
                         const sendAction = throttle(() => {
                             bot.sendChatAction(chatId, 'upload_video');
                         }, 3000)
