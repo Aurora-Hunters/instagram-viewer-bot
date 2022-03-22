@@ -179,8 +179,6 @@ const main = (async () => { try {
                     let tgContent;
 
                     if (mediaItem.type === 'video') {
-                        return mediaItem.media;
-
                         return null;
 
                         const sendAction = throttle(() => {
