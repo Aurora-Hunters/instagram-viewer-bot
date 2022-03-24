@@ -232,6 +232,8 @@ const main = (async () => { try {
                       // tgContent = fs.createReadStream(`${filePath}`);
                     } else {
                         tgContent = mediaItem.media;
+
+                        tgContent = await uploadByUrl(tgContent).link;
                     }
 
                     mediaItem.media = tgContent;
@@ -348,7 +350,7 @@ const main = (async () => { try {
 
             const storiesData = await request(`/api/v1/feed/reels_media/?reel_ids=${userId}`, false);
 
-            storiesData.reels[userId.toString()].items.forEach(storyItem => {
+            storiesData.reels[userId.toString()].items.forEach(async storyItem => {
                 if (storyItem.id !== `${storyId}_${userId}`) return;
 
                 if (storyItem.audience) {
@@ -371,6 +373,8 @@ const main = (async () => { try {
                  */
                 if (storyItem.media_type === 1) {
                     mediaUrl = storyItem.image_versions2.candidates[0].url;
+
+                    mediaUrl = await uploadByUrl(mediaUrl).link;
 
                     bot.sendChatAction(chatId, 'upload_photo');
 
