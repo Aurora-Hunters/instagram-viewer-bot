@@ -97,7 +97,8 @@ class Media {
         if (this.isVideo(mediaItem)) {
             return {
                 type: 'video',
-                media: mediaItem.video_versions[0].url
+                // media: mediaItem.video_versions[0].url
+                media: mediaItem.video_versions.slice(-1).pop().url
             };
         }
 
