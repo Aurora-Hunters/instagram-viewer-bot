@@ -104,6 +104,8 @@ const main = (async () => { try {
      */
 
     bot.onText(instagramRegex.post, async (msg, match) => {
+        // console.log(msg);
+
         /** Get chatId for response sending */
         const chatId = msg.chat.id;
 
@@ -299,7 +301,7 @@ const main = (async () => { try {
 
             amplitude.logEvent({
               event_type: 'get instagram post',
-              user_id: chatId,
+              user_id: `${chatId}`,
               time: msg.date,
             });
         } catch (e) {
@@ -434,7 +436,7 @@ const main = (async () => { try {
 
               amplitude.logEvent({
                 event_type: 'get story',
-                user_id: chatId,
+                user_id: `${chatId}`,
                 time: msg.date,
               });
             });

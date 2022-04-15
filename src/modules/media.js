@@ -15,9 +15,10 @@ class Media {
      * @param contentData
      */
     constructor(contentData) {
-        console.log('contentData', contentData);
+        // console.log('contentData', contentData);
 
         this.content = contentData.items[0];
+        // console.log(this.content);
     }
 
     /**
