@@ -12,6 +12,12 @@ HawkCatcher.init({
     token: process.env.HAWK_TOKEN
 });
 
+/**
+ * Initialize Amplitude
+ */
+const Amplitude = require('@amplitude/node');
+const amplitude = Amplitude.init(process.env.AMPLITUDE_TOKEN);
+
 const TelegramBot = require('node-telegram-bot-api');
 const axios = require('axios');
 const { uploadByUrl, uploadByBuffer } = require('telegraph-uploader');
@@ -288,6 +294,14 @@ const main = (async () => { try {
                 link,
                 msg
             }, {id: chatId})
+
+
+
+            amplitude.logEvent({
+              event_type: 'get instagram post',
+              user_id: chatId,
+              time: msg.date,
+            });
         } catch (e) {
             HawkCatcher.send(e, {
                 link,
@@ -415,6 +429,14 @@ const main = (async () => { try {
                     link,
                     msg
                 }, {id: chatId})
+
+
+
+              amplitude.logEvent({
+                event_type: 'get story',
+                user_id: chatId,
+                time: msg.date,
+              });
             });
 
         } catch (e) {
@@ -426,6 +448,158 @@ const main = (async () => { try {
             console.error(e);
         }
     });
+    //
+    // bot.on('inline_query', async (inlineQuery) => {
+    //   const query = inlineQuery.query;
+    //   const chatId = inlineQuery.from.id;
+    //
+    //   // console.log(instagramRegex.post.exec(query));
+    //
+    //   if (instagramRegex.post.test(query)) {
+    //     const match = instagramRegex.post.exec(query);
+    //
+    //     // ---- copy-paste started
+    //
+    //     const link = match[1];
+    //     const mediaTag = match[2];
+    //
+    //     let contentData;
+    //
+    //     try {
+    //       /** Load Instagram post media data*/
+    //       contentData = await request(`/p/${mediaTag}`);
+    //     } catch (e) {
+    //       const error = new Error(`[inline] Cannot get media by shortcode "${mediaTag}" because of ${e}`);
+    //
+    //       console.error(error);
+    //     }
+    //
+    //     if (!contentData) {
+    //       const error = new Error('[inline] getMediaByShortcode returned undefined');
+    //
+    //       console.error(error);
+    //       return;
+    //     }
+    //
+    //     try {
+    //       /**
+    //        * Prepare Media object
+    //        * @type {Media}
+    //        */
+    //       const media = new Media(contentData);
+    //
+    //       if (media.getOwner().is_private) {
+    //         const action = 'typing';
+    //         const message = 'Profile is private';
+    //         const options = {
+    //           reply_to_message_id: msg.message_id
+    //         }
+    //
+    //         return;
+    //       }
+    //
+    //       /**
+    //        * Get array of medias
+    //        * @type {{type: string, media: string}[]}
+    //        */
+    //       let medias = media.getMedias();
+    //
+    //       /**
+    //        * Compose text for message
+    //        * @type {string}
+    //        */
+    //       const caption = getMediaText(media);
+    //
+    //       const action = medias[0].type === 'video' ? 'upload_video' : 'upload_photo';
+    //
+    //       medias = await Promise.all(medias.map(async (mediaItem) => {
+    //         try {
+    //           let tgContent;
+    //
+    //           if (mediaItem.type === 'video') {
+    //             let tempDir = path.join(__dirname, 'temp');
+    //             if (!fs.existsSync(tempDir)){
+    //               fs.mkdirSync(tempDir);
+    //             }
+    //
+    //             let fileName = path.basename(mediaItem.media);
+    //             fileName = fileName.substring(0, fileName.indexOf('?'));
+    //
+    //             let filePath = path.join(tempDir, fileName);
+    //
+    //             await downloadFile(mediaItem.media, filePath);
+    //
+    //             tgContent = await uploadByBuffer(fs.readFileSync(`${filePath}`), 'video/mp4');
+    //
+    //             fs.unlinkSync(`${filePath}`);
+    //
+    //             tgContent = tgContent.link;
+    //           } else {
+    //             tgContent = mediaItem.media;
+    //           }
+    //
+    //           mediaItem.media = tgContent;
+    //
+    //           return mediaItem;
+    //         } catch (error) {
+    //           console.error(error);
+    //         }
+    //
+    //         return null;
+    //       }));
+    //
+    //       medias = medias.filter(mediaItem => {
+    //         return mediaItem !== null;
+    //       });
+    //
+    //       // Do not send any message if no media was found
+    //       if (medias.length === 0) {
+    //         return;
+    //       }
+    //
+    //       // /**
+    //       //  * Send message
+    //       //  */
+    //       // bot.sendChatAction(chatId, action);
+    //       // bot.sendMediaGroup(chatId, medias, {
+    //       //   reply_to_message_id: msg.message_id,
+    //       //   allow_sending_without_reply: true
+    //       // })
+    //       //   .catch((error) => {
+    //       //     HawkCatcher.send(error, {
+    //       //       msg,
+    //       //       contentData
+    //       //     }, {id: chatId});
+    //       //     console.error(error);
+    //       //   })
+    //
+    //       // HawkCatcher.send('[inline] Metrika hit', {
+    //       //   link,
+    //       //   msg
+    //       // }, {id: chatId})
+    //
+    //
+    //
+    //       const form = medias.map(media => {
+    //         if (media.type === 'video') {
+    //           return {
+    //             type: 'video',
+    //             id: '',
+    //             video_url: media.media,
+    //             mime_type: 'video/mp4',
+    //             thumb_url: ''
+    //           }
+    //         }
+    //       });
+    //     } catch (e) {
+    //       console.error(e);
+    //     }
+    //
+    //     // --- copy-paste ended
+    //
+    //     bot.answerInlineQuery(inlineQuery.id, form);
+    //   }
+    // })
 
     /**
      * Add error handling listener
